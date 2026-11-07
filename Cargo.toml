@@ -1,0 +1,72 @@
+[package]
+name = "bfme-launcher"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Portable launcher for The Battle for Middle-earth I, II and Rise of the Witch-king"
+build = "build.rs"
+
+[features]
+default = ["bundle-dx9"]
+# Embeds the DirectX 9 redistributable (~100 MB) into the executable so it can be
+# installed during the first sync, exactly like the original launcher did.
+# Build with `--no-default-features` for a small exe that skips the DX9 install.
+# Windows only: on Linux, Proton/Wine already provide the DirectX 9 runtime.
+bundle-dx9 = []
+
+[dependencies]
+eframe = { version = "0.36", default-features = false, features = ["accesskit", "default_fonts", "glow", "links", "wayland", "x11"] }
+egui = "0.36"
+winit = "0.30.13"
+egui_extras = { version = "0.36", features = ["all_loaders", "http"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "ico"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+indexmap = { version = "2", features = ["serde"] }
+ureq = "2"
+url = "2"
+flate2 = "1"
+base64 = "0.22"
+md-5 = "0.10"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+rfd = "0.17"
+uuid = { version = "1", features = ["v4"] }
+chrono = "0.4"
+raw-window-handle = "0.6"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.55"
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Threading",
+    "Win32_UI_Shell",
+    "Win32_UI_HiDpi",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2"
+tar = "0.4"
+lzma-rust2 = { version = "0.25", default-features = false, features = ["std", "xz", "optimization"] }
+sha2 = "0.10"
+
+[build-dependencies]
+winresource = "0.1"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true
+
+# Hashing several GB of game files is unbearably slow unoptimised, so even debug builds
+# optimise the hash crates.
+[profile.dev.package.md-5]
+opt-level = 3
+[profile.dev.package.sha2]
+opt-level = 3
